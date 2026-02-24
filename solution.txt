@@ -1,0 +1,119 @@
+------------------------------------------------------------
+1. Create Database and connect to it
+------------------------------------------------------------
+
+psql --username=freecodecamp --dbname=postgres;
+
+CREATE DATABASE worldcup;
+
+\c worldcup
+
+------------------------------------------------------------
+2. Create tables as required conditions
+------------------------------------------------------------
+
+CREATE TABLE teams (
+    team_id SERIAL PRIMARY KEY NOT NULL,
+    name VARCHAR(60) UNIQUE NOT NULL
+);
+
+CREATE TABLE games (
+    game_id SERIAL PRIMARY KEY NOT NULL,
+    year INT NOT NULL,
+    round VARCHAR(50) NOT NULL,
+    winner_goals INT NOT NULL,
+    opponent_goals INT NOT NULL,
+    winner_id INT REFERENCES teams(team_id) NOT NULL,
+    opponent_id INT REFERENCES teams(team_id) NOT NULL
+);
+
+------------------------------------------------------------
+3.  Executable permission of .sh files (bash terminal)
+------------------------------------------------------------
+
+chmod +x queries.sh
+
+chmod +x insert_data.sh
+
+------------------------------------------------------------
+4. Complete the "insert_data.sh" script
+------------------------------------------------------------
+
+# Add the following to the 'insert_data.sh' below the original comment file.
+
+cat games.csv | while IFS="," read YEAR ROUND WINNER OPPONENT WIN_GOL OPO_GOL
+do
+  if [[ $YEAR != "year" ]]
+    then
+
+    # if winner team is not inserted yet
+    WIN_ID=$($PSQL "SELECT team_id FROM teams WHERE name = '$WINNER';")
+    if [[ -z $WIN_ID ]]
+      then
+        # insert winner data
+        INSERT_TEAM_RESULT=$($PSQL "INSERT INTO teams(name) VALUES('$WINNER')")
+        if [[ $INSERT_TEAM_RESULT == "INSERT 0 1" ]]
+          then
+          echo Inserted into teams, $WINNER
+        fi
+    fi
+
+    # if opponent team is not inserted yet
+    OPO_ID=$($PSQL "SELECT team_id FROM teams WHERE name = '$OPPONENT';")
+    if [[ -z $OPO_ID ]]
+      then
+        # insert opponent data
+        INSERT_TEAM_RESULT=$($PSQL "INSERT INTO teams(name) VALUES('$OPPONENT')")
+        if [[ $INSERT_TEAM_RESULT == "INSERT 0 1" ]]
+          then
+          echo Inserted into teams, $OPPONENT
+        fi
+    fi
+
+
+    GAME_ID=$($PSQL "SELECT game_id FROM games WHERE year=$YEAR AND round='$ROUND' AND winner_goals=$WIN_GOL AND opponent_goals=$OPO_GOL AND winner_id=$WIN_ID;")
+    if [[ -z $GAME_ID ]]
+      then
+      # insert game data
+      INSERT_GAME_RESULT=$($PSQL "INSERT INTO games(year, round, winner_goals, opponent_goals, winner_id, opponent_id) VALUES($YEAR, '$ROUND', $WIN_GOL, $OPO_GOL, $WIN_ID, $OPO_ID)")
+    fi
+  
+  fi
+done
+
+------------------------------------------------------------
+5. Complete "queries.sh" script
+------------------------------------------------------------
+# Add the following lines to the queries.sh file
+
+echo "$($PSQL "SELECT SUM(winner_goals)+SUM(opponent_goals) FROM games")"
+
+echo "$($PSQL "SELECT AVG(winner_goals) FROM games")"
+
+echo "$($PSQL "SELECT ROUND(AVG(winner_goals),2) FROM games")"
+
+echo "$($PSQL "SELECT AVG(winner_goals)+AVG(opponent_goals) FROM games")"
+
+echo "$($PSQL "SELECT MAX(winner_goals) FROM games")"
+
+echo "$($PSQL "SELECT COUNT(*) FROM games WHERE winner_goals > 2")"
+
+echo "$($PSQL "SELECT name FROM games RIGHT JOIN teams ON games.winner_id = teams.team_id WHERE year=2018 AND round = 'Final'")"
+
+echo "$($PSQL "SELECT name FROM games RIGHT JOIN teams ON games.winner_id = teams.team_id OR games.opponent_id = teams.team_id WHERE year=2014 AND round = 'Eighth-Final' ORDER BY name")"
+
+echo "$($PSQL "SELECT DISTINCT name FROM teams RIGHT JOIN games ON games.winner_id = teams.team_id ")"
+
+echo "$($PSQL "SELECT year, name FROM games RIGHT JOIN teams ON games.winner_id = teams.team_id WHERE round='Final'")"
+
+echo "$($PSQL "SELECT name FROM teams WHERE name LIKE 'Co%' ")"
+
+------------------------------------------------------------
+6. Save the SQL Database (in the bash terminal)
+------------------------------------------------------------
+
+pg_dump -cC --inserts -U freecodecamp worldcup > worldcup.sql
+
+------------------------------------------------------------
+7. End
+------------------------------------------------------------

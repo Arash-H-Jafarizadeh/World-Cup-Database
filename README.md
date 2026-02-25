@@ -1,8 +1,6 @@
 # World Cup Database
 
-This is (my) solution to freeCodeCamp's Certification Project for SQL and bash script. This the second project in the Relational Database course.
-
-For this project, you will create a Bash script that enters information from World Cup games into PostgreSQL, then query the database for useful statistics.
+This is (my) solution to freeCodeCamp's Certification Project for SQL and bash script. For this project, I created a Bash script that enters information from World Cup games into PostgreSQL database, then query the database for useful statistics.
 
 ## CodeRoad instructions:
 Follow the instructions and get all the user stories below to pass to finish the project.
